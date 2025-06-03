@@ -1,222 +1,420 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Mker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cloud-Weather</title>
+  <style>
+    /* Base Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ffffff 0%, #e0f7fa 100%);
+      animation: backgroundShift 20s ease-in-out infinite alternate;
+      overflow-x: hidden;
+    }
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
-    <style>
-        body {
-            font-family: 'Roboto Mono', monospace;
-            background-color: #f5f5f5;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        
-        /* Light Mode */
-        .light-mode {
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        
-        /* Dark Mode */
-        .dark-mode {
-            background-color: #181818;
-            color: #eaeaea;
-        }
+    /* Animate the background to gently shift like drifting through clouds */
+    @keyframes backgroundShift {
+      0% {
+        background-position: 0% 0%;
+      }
+      100% {
+        background-position: 100% 100%;
+      }
+    }
 
-        h1 {
-            text-align: center;
-            margin-top: 20px;
-            color: inherit;
-        }
+    /* Top bar: title in top-right */
+    .top-bar {
+      width: 100%;
+      padding: 1rem 2rem;
+      position: relative;
+    }
+    .title {
+      position: absolute;
+      top: 1rem;
+      right: 2rem;
+      font-size: 1.5rem;
+      font-style: italic;
+      font-weight: bold;
+      color: #007acc;
+    }
 
-        #webAppForm {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: inherit;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            color: inherit;
-        }
+    /* Main container centered */
+    .container {
+      max-width: 800px;
+      margin: 6rem auto 2rem;
+      padding: 0 1rem;
+    }
 
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 8px;
-        }
+    /* Search area */
+    .search-area {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .search-area input[type="text"] {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 999px;
+      background-color: rgba(255, 255, 255, 0.8);
+      font-size: 1rem;
+      outline: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.2s ease;
+    }
+    .search-area input[type="text"]:focus {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .search-area button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 999px;
+      background-color: #007acc;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .search-area button:hover {
+      background-color: #005fa3;
+    }
 
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            background-color: #fff;
-            font-size: 16px;
-            font-family: 'Roboto Mono', monospace;
-            transition: all 0.3s ease;
-        }
+    /* Weather display cards */
+    .weather-card {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.5s ease-out forwards;
+      opacity: 0;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
 
-        textarea {
-            resize: vertical;
-        }
+    .weather-card .location-name {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #025f8c;
+      margin-bottom: 0.75rem;
+    }
 
-        input:focus, textarea:focus {
-            border-color: #6c63ff;
-            outline: none;
-        }
+    .current-weather {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .current-weather .temp {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #ff6d00;
+    }
+    .current-weather .details {
+      text-align: right;
+      color: #555;
+    }
+    .current-weather .details div {
+      margin-bottom: 0.25rem;
+      font-size: 0.95rem;
+    }
 
-        button {
-            background-color: #6c63ff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-family: 'Roboto Mono', monospace;
-            transition: background-color 0.3s ease;
-        }
+    .forecast-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 1rem;
+    }
+    .forecast-day {
+      background-color: #e0f7fa;
+      border-radius: 0.75rem;
+      padding: 0.75rem;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .forecast-day .day-date {
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+      color: #025f8c;
+    }
+    .forecast-day .icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+    .forecast-day .temp-max {
+      font-weight: bold;
+      color: #d32f2f;
+    }
+    .forecast-day .temp-min {
+      color: #1565c0;
+    }
 
-        button:hover {
-            background-color: #5a54e1;
-        }
+    /* Loader */
+    .loader {
+      margin: 3rem auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #007acc;
+      border-radius: 50%;
+      width: 3rem;
+      height: 3rem;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-        #downloadLink {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        #downloadButton {
-            font-size: 18px;
-            text-decoration: none;
-            color: #fff;
-            background-color: #28a745;
-            padding: 10px 20px;
-            border-radius: 10px;
-            transition: background-color 0.3s ease;
-        }
-
-        #downloadButton:hover {
-            background-color: #218838;
-        }
-
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background-color: #fff;
-            border-radius: 50%;
-            padding: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .theme-toggle:hover {
-            background-color: #f1f1f1;
-        }
-
-        /* Dark mode specific styles for input and textarea */
-        .dark-mode input, .dark-mode textarea {
-            background-color: #333;
-            color: #eaeaea;
-            border-color: #444;
-        }
-
-        .dark-mode button {
-            background-color: #5a54e1;
-        }
-    </style>
+    /* Helper text */
+    .error-message {
+      color: #d32f2f;
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 1rem;
+    }
+  </style>
 </head>
-<body class="light-mode">
-    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-
-    <h1>Web Mker</h1>
-    <form id="webAppForm">
-        <label for="appName">App Name:</label>
-        <input type="text" id="appName" placeholder="Enter app name" required><br><br>
-
-        <label for="htmlCode">HTML Code:</label><br>
-        <textarea id="htmlCode" rows="10" cols="50" placeholder="Paste your HTML code here"></textarea><br><br>
-
-        <label for="cssCode">CSS Code:</label><br>
-        <textarea id="cssCode" rows="10" cols="50" placeholder="Paste your CSS code here"></textarea><br><br>
-
-        <label for="jsCode">JavaScript Code:</label><br>
-        <textarea id="jsCode" rows="10" cols="50" placeholder="Paste your JS code here"></textarea><br><br>
-
-        <label for="extraFiles">Extra Files (Optional):</label><br>
-        <textarea id="extraFiles" rows="5" cols="50" placeholder="Name of extra files with their content, e.g. file1.txt=Hello World"></textarea><br><br>
-
-        <button type="button" onclick="createApp()">Create App</button>
-    </form>
-    
-    <div id="downloadLink" style="display:none;">
-        <a id="downloadButton" href="#">Download your Web App</a>
+<body>
+  <div class="top-bar">
+    <div class="title">cloud-weather</div>
+  </div>
+  <div class="container">
+    <div class="search-area">
+      <input type="text" id="location-input" placeholder="Enter location (city, country)..." />
+      <button id="search-button">Search</button>
+      <button id="current-location-button">Use My Location</button>
     </div>
 
-    <script>
-        function toggleTheme() {
-            const body = document.body;
-            const currentTheme = body.classList.contains('light-mode') ? 'light' : 'dark';
-            if (currentTheme === 'light') {
-                body.classList.remove('light-mode');
-                body.classList.add('dark-mode');
-                document.querySelector('.theme-toggle').textContent = '🌞';
-            } else {
-                body.classList.remove('dark-mode');
-                body.classList.add('light-mode');
-                document.querySelector('.theme-toggle').textContent = '🌙';
-            }
+    <div id="weather-result"></div>
+    <div id="loader" class="loader" style="display: none;"></div>
+    <div id="error" class="error-message"></div>
+  </div>
+
+  <script>
+    // ====== Utility: Map Open-Meteo weather codes to simple emojis and descriptions ======
+    const weatherCodeMap = {
+      0: { icon: "☀️", desc: "Clear sky" },
+      1: { icon: "🌤️", desc: "Mainly clear" },
+      2: { icon: "⛅", desc: "Partly cloudy" },
+      3: { icon: "☁️", desc: "Overcast" },
+      45: { icon: "🌫️", desc: "Fog" },
+      48: { icon: "🌫️", desc: "Depositing rime fog" },
+      51: { icon: "🌦️", desc: "Light drizzle" },
+      53: { icon: "🌦️", desc: "Moderate drizzle" },
+      55: { icon: "🌧️", desc: "Dense drizzle" },
+      56: { icon: "🌧️", desc: "Light freezing drizzle" },
+      57: { icon: "🌧️", desc: "Dense freezing drizzle" },
+      61: { icon: "🌧️", desc: "Slight rain" },
+      63: { icon: "🌧️", desc: "Moderate rain" },
+      65: { icon: "🌧️", desc: "Heavy rain" },
+      66: { icon: "🌨️", desc: "Light freezing rain" },
+      67: { icon: "🌨️", desc: "Heavy freezing rain" },
+      71: { icon: "❄️", desc: "Slight snow fall" },
+      73: { icon: "❄️", desc: "Moderate snow fall" },
+      75: { icon: "❄️", desc: "Heavy snow fall" },
+      77: { icon: "🌨️", desc: "Snow grains" },
+      80: { icon: "🌦️", desc: "Slight rain showers" },
+      81: { icon: "🌧️", desc: "Moderate rain showers" },
+      82: { icon: "🌧️", desc: "Violent rain showers" },
+      85: { icon: "🌨️", desc: "Slight snow showers" },
+      86: { icon: "🌨️", desc: "Heavy snow showers" },
+      95: { icon: "⛈️", desc: "Thunderstorm" },
+      96: { icon: "⛈️", desc: "Thunderstorm with slight hail" },
+      99: { icon: "⛈️", desc: "Thunderstorm with heavy hail" }
+    };
+
+    // ====== DOM Elements ======
+    const locationInput = document.getElementById("location-input");
+    const searchButton = document.getElementById("search-button");
+    const currentLocationButton = document.getElementById("current-location-button");
+    const weatherResult = document.getElementById("weather-result");
+    const loader = document.getElementById("loader");
+    const errorMessage = document.getElementById("error");
+
+    // ====== Show / Hide Loader ======
+    function showLoader() {
+      loader.style.display = "block";
+    }
+    function hideLoader() {
+      loader.style.display = "none";
+    }
+
+    // ====== Display Error ======
+    function showError(msg) {
+      errorMessage.textContent = msg;
+    }
+    function clearError() {
+      errorMessage.textContent = "";
+    }
+
+    // ====== Fetch Coordinates by Location Name using Open-Meteo Geocoding API ======
+    async function fetchCoordinates(locationName) {
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationName)}&count=1`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch geocoding data.");
+      }
+      const data = await response.json();
+      if (!data.results || data.results.length === 0) {
+        throw new Error("Location not found. Please try another search.");
+      }
+      const { latitude, longitude, name, country, admin1 } = data.results[0];
+      return { latitude, longitude, name, country, admin1 };
+    }
+
+    // ====== Fetch Weather Data (Current + 7-Day Forecast) using Open-Meteo Forecast API ======
+    async function fetchWeather(lat, lon) {
+      // Request: current weather + daily forecast (temp max/min + weather code)
+      const params = new URLSearchParams({
+        latitude: lat,
+        longitude: lon,
+        current_weather: "true",
+        daily: "temperature_2m_max,temperature_2m_min,weathercode",
+        timezone: "auto"
+      });
+      const url = `https://api.open-meteo.com/v1/forecast?${params.toString()}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch weather data.");
+      }
+      const data = await response.json();
+      return data;
+    }
+
+    // ====== Build & Render Weather Card ======
+    function renderWeatherCard(locationMeta, weatherData) {
+      const { name, country, admin1 } = locationMeta;
+      const { current_weather, daily } = weatherData;
+      const locationName = `${name}${admin1 ? ", " + admin1 : ""}, ${country}`;
+
+      // Create card container
+      const card = document.createElement("div");
+      card.className = "weather-card";
+
+      // Location title
+      const locTitle = document.createElement("div");
+      locTitle.className = "location-name";
+      locTitle.textContent = locationName;
+      card.appendChild(locTitle);
+
+      // Current weather section
+      const curSection = document.createElement("div");
+      curSection.className = "current-weather";
+
+      const tempDiv = document.createElement("div");
+      tempDiv.className = "temp";
+      tempDiv.textContent = `${Math.round(current_weather.temperature)}°C`;
+
+      const detailsDiv = document.createElement("div");
+      detailsDiv.className = "details";
+      const codeInfo = weatherCodeMap[current_weather.weathercode] || { icon: "❔", desc: "Unknown" };
+      detailsDiv.innerHTML = `
+        <div>${codeInfo.icon} ${codeInfo.desc}</div>
+        <div>Wind: ${Math.round(current_weather.windspeed)} km/h</div>
+      `;
+
+      curSection.appendChild(tempDiv);
+      curSection.appendChild(detailsDiv);
+      card.appendChild(curSection);
+
+      // 7-Day Forecast section
+      const forecastDiv = document.createElement("div");
+      forecastDiv.className = "forecast-container";
+      const dates = daily.time;
+      const maxTemps = daily.temperature_2m_max;
+      const minTemps = daily.temperature_2m_min;
+      const codes = daily.weathercode;
+
+      for (let i = 0; i < dates.length; i++) {
+        const dayCard = document.createElement("div");
+        dayCard.className = "forecast-day";
+        const dateStr = new Date(dates[i]).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+        const code = codes[i];
+        const icon = (weatherCodeMap[code] || { icon: "❔" }).icon;
+
+        dayCard.innerHTML = `
+          <div class="day-date">${dateStr}</div>
+          <div class="icon">${icon}</div>
+          <div class="temp-max">${Math.round(maxTemps[i])}°C</div>
+          <div class="temp-min">${Math.round(minTemps[i])}°C</div>
+        `;
+        forecastDiv.appendChild(dayCard);
+      }
+      card.appendChild(forecastDiv);
+
+      return card;
+    }
+
+    // ====== Main: Perform Search by Location Name ======
+    async function searchByLocation() {
+      const query = locationInput.value.trim();
+      if (!query) {
+        showError("Please enter a location to search.");
+        return;
+      }
+      clearError();
+      weatherResult.innerHTML = "";
+      showLoader();
+      try {
+        const coords = await fetchCoordinates(query);
+        const weatherData = await fetchWeather(coords.latitude, coords.longitude);
+        const card = renderWeatherCard(coords, weatherData);
+        weatherResult.appendChild(card);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        hideLoader();
+      }
+    }
+
+    // ====== Main: Perform Search by Current Geolocation ======
+    function searchByCurrentLocation() {
+      clearError();
+      weatherResult.innerHTML = "";
+      if (!navigator.geolocation) {
+        showError("Geolocation is not supported by your browser.");
+        return;
+      }
+      showLoader();
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            // For display, reverse-lookup location name via Geocoding API (optional)
+            const meta = { latitude, longitude, name: "Current Location", country: "" };
+            const weatherData = await fetchWeather(latitude, longitude);
+            const card = renderWeatherCard(meta, weatherData);
+            weatherResult.appendChild(card);
+          } catch (err) {
+            showError(err.message);
+          } finally {
+            hideLoader();
+          }
+        },
+        (err) => {
+          hideLoader();
+          showError("Unable to retrieve your location. Please allow location access or try search.");
         }
+      );
+    }
 
-        function createApp() {
-            const appName = document.getElementById('appName').value.trim();
-            const htmlCode = document.getElementById('htmlCode').value;
-            const cssCode = document.getElementById('cssCode').value;
-            const jsCode = document.getElementById('jsCode').value;
-            const extraFilesText = document.getElementById('extraFiles').value.trim();
-
-            if (!appName || !htmlCode || !cssCode || !jsCode) {
-                alert('Please fill in all fields!');
-                return;
-            }
-
-            const zip = new JSZip();
-
-            zip.file(appName + '/index.html', htmlCode);
-            zip.file(appName + '/style.css', cssCode);
-            zip.file(appName + '/script.js', jsCode);
-
-            if (extraFilesText) {
-                const extraFiles = extraFilesText.split('\n');
-                extraFiles.forEach(fileLine => {
-                    const [fileName, fileContent] = fileLine.split('=');
-                    if (fileName && fileContent) {
-                        zip.file(appName + '/' + fileName.trim(), fileContent.trim());
-                    }
-                });
-            }
-
-            zip.generateAsync({ type: 'blob' }).then(function(content) {
-                const downloadLink = document.getElementById('downloadLink');
-                const downloadButton = document.getElementById('downloadButton');
-                const blob = content;
-                const link = URL.createObjectURL(blob);
-
-                downloadButton.href = link;
-                downloadButton.download = appName + '.zip';
-                downloadLink.style.display = 'block';
-            });
-        }
-    </script>
+    // ====== Event Listeners ======
+    searchButton.addEventListener("click", searchByLocation);
+    currentLocationButton.addEventListener("click", searchByCurrentLocation);
+    locationInput.addEventListener("keyup", (e) => {
+      if (e.key === "Enter") {
+        searchByLocation();
+      }
+    });
+  </script>
 </body>
 </html>
